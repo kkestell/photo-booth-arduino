@@ -4,7 +4,6 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(60, 3, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   Serial.begin(9600);
-
   pixels.begin();
   clear();
 }
@@ -17,72 +16,66 @@ void clear() {
   pixels.show();
 }
 
-void countdown_slow() {
-  for(int b = 0; b < 64; b++) {
-    for(int i = 0; i < 60; i++) {
-      pixels.setPixelColor(i, pixels.Color(b, b, b));
+void fade(int from, int to) {
+  fill(from, from, from);
+  
+  if(to > from) {
+    for(int l = from; l < to; l++) {
+      fill(l, l, l);
+      pixels.show();
+      delay(1);
     }
-    pixels.show();
-    delay(16);
+  } else {
+    for(int l = from; l > to; l--) {
+      fill(l, l, l);
+      pixels.show();
+      delay(1);
+    }
   }
-
-  for(int i = 0; i < 60; i++) {
-    if(i - 1 >= 0)
-      pixels.setPixelColor(i - 1, pixels.Color(32, 32, 32));
-
-    if(i - 2 >= 0)
-      pixels.setPixelColor(i - 2, pixels.Color(16, 16, 16));
-
-    if(i - 3 >= 0)
-      pixels.setPixelColor(i - 3, pixels.Color(4, 4, 4));
-
-    if(i - 4 >= 0)
-      pixels.setPixelColor(i - 4, pixels.Color(0, 0, 0));
-
-    pixels.show();
-
-    delay(180);
-  }
-
-  clear();
 }
 
-void countdown_fast() {
-  for(int b = 0; b < 64; b++) {
+void fill(int r, int g, int b) {
     for(int i = 0; i < 60; i++) {
-      pixels.setPixelColor(i, pixels.Color(b, b, b));
+      pixels.setPixelColor(i, pixels.Color(r, g, b));
     }
-    pixels.show();
-    delay(16);
-  }
+}
+
+void count_up(float duration, int brightness) {
+  clear();
 
   for(int i = 0; i < 60; i++) {
-    if(i - 1 >= 0)
-      pixels.setPixelColor(i - 1, pixels.Color(32, 32, 32));
-
-    if(i - 2 >= 0)
-      pixels.setPixelColor(i - 2, pixels.Color(16, 16, 16));
-
-    if(i - 3 >= 0)
-      pixels.setPixelColor(i - 3, pixels.Color(4, 4, 4));
-
-    if(i - 4 >= 0)
-      pixels.setPixelColor(i - 4, pixels.Color(0, 0, 0));
-
+    pixels.setPixelColor(i, pixels.Color(brightness, brightness, brightness));
     pixels.show();
-
-    delay(40);
+    delay(duration / 60);
   }
 
-  clear();
+  fade(0, 60);
+  fade(60, 0);
+  fade(0, 60);
+  fade(60, 0);
+  fade(0, 60);
+}
+
+void count_down(float duration) {
+  for(int i = 0; i < 60; i++) {
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+    pixels.show();
+    delay(duration / 60);
+  }
 }
 
 void loop() {
-  if (Serial.available() > 0) {  
+  if (Serial.available() > 0) {
     int command = Serial.read() - 48;
-    if(command == 0)
-      countdown_slow();
-    else if(command == 1)
-      countdown_fast();
+    if(command == 0) {
+      count_up(10000, 32);
+    } else if(command == 1) {
+      delay(1000);
+      count_down(3000);
+    } else if(command == 2) {
+      fade(0, 60);
+      delay(1000);
+      count_down(3000);
+    }
   }
 }
